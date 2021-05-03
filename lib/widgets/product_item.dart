@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:i_shop/providers/cart.dart';
 import 'package:provider/provider.dart';
@@ -39,8 +41,12 @@ class ProductItem extends StatelessWidget {
                 product.isFavorite ? Icons.favorite : Icons.favorite_border,
               ),
               color: Theme.of(context).accentColor,
-              onPressed: () {
-                product.toggleFavoriteStatus();
+              onPressed: () async{
+                try {
+                  await product.toggleFavoriteStatus();
+                } catch (error) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('could not update favorite status')));
+                }
               },
             ),
           ),

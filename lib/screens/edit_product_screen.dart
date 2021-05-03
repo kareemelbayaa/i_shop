@@ -17,6 +17,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
   final _imageUrlController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   var _isInit = true;
+  var _isLoading = false;
+
   var _initValues = {
     'title': '',
     'description': '',
@@ -69,128 +71,166 @@ class _EditProductScreenState extends State<EditProductScreen> {
           title: Text('Edit Product'),
           actions: [IconButton(icon: Icon(Icons.save), onPressed: _saveForm)],
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              children: [
-                TextFormField(
-                  initialValue: _initValues['title'],
-                  decoration: InputDecoration(labelText: 'Title'),
-                  textInputAction: TextInputAction.next,
-                  onFieldSubmitted: (_) =>
-                      FocusScope.of(context).requestFocus(_priceFocusNode),
-                  onSaved: (value) {
-                    _editedProduct = Product(
-                        id: _editedProduct.id,
-                        title: value,
-                        description: _editedProduct.description,
-                        price: _editedProduct.price,
-                        isFavorite: _editedProduct.isFavorite,
-                        imageUrl: _editedProduct.imageUrl);
-                  },
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return 'value cannot be empty';
-                    }
-                    return null;
-                  },
+        body: _isLoading
+            ? Center(
+                child: CircularProgressIndicator(),
+              )
+            : Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _formKey,
+                  child: ListView(
+                    children: [
+                      TextFormField(
+                        initialValue: _initValues['title'],
+                        decoration: InputDecoration(labelText: 'Title'),
+                        textInputAction: TextInputAction.next,
+                        onFieldSubmitted: (_) => FocusScope.of(context)
+                            .requestFocus(_priceFocusNode),
+                        onSaved: (value) {
+                          _editedProduct = Product(
+                              id: _editedProduct.id,
+                              title: value,
+                              description: _editedProduct.description,
+                              price: _editedProduct.price,
+                              isFavorite: _editedProduct.isFavorite,
+                              imageUrl: _editedProduct.imageUrl);
+                        },
+                        validator: (value) {
+                          if (value.isEmpty) {
+                            return 'value cannot be empty';
+                          }
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                          initialValue: _initValues['price'],
+                          decoration: InputDecoration(labelText: 'Price'),
+                          keyboardType: TextInputType.number,
+                          focusNode: _priceFocusNode,
+                          onFieldSubmitted: (_) => FocusScope.of(context)
+                              .requestFocus(_descriptionFocusNode),
+                          onSaved: (value) {
+                            _editedProduct = Product(
+                                id: _editedProduct.id,
+                                title: _editedProduct.title,
+                                description: _editedProduct.description,
+                                price: double.parse(value),
+                                isFavorite: _editedProduct.isFavorite,
+                                imageUrl: _editedProduct.imageUrl);
+                          },
+                          validator: (value) {
+                            if (value.isEmpty) {
+                              return 'value cannot be empty';
+                            }
+                            return null;
+                          },
+                          textInputAction: TextInputAction.next),
+                      TextFormField(
+                          initialValue: _initValues['description'],
+                          decoration: InputDecoration(labelText: 'Description'),
+                          maxLines: 3,
+                          keyboardType: TextInputType.multiline,
+                          focusNode: _descriptionFocusNode,
+                          validator: (value) {
+                            if (value.isEmpty) {
+                              return 'value cannot be empty';
+                            }
+                            return null;
+                          },
+                          onSaved: (value) {
+                            _editedProduct = Product(
+                                id: _editedProduct.id,
+                                title: _editedProduct.title,
+                                description: value,
+                                price: _editedProduct.price,
+                                isFavorite: _editedProduct.isFavorite,
+                                imageUrl: _editedProduct.imageUrl);
+                          },
+                          textInputAction: TextInputAction.next),
+                      Expanded(
+                          child: TextFormField(
+                        /// you can't have an initalValue and a controller
+                        // initialValue: _initValues['imageUrl'],
+                        decoration: InputDecoration(labelText: 'Image URL'),
+                        keyboardType: TextInputType.url,
+                        textInputAction: TextInputAction.done,
+                        controller: _imageUrlController,
+                        validator: (value) {
+                          if (value.isEmpty) {
+                            return 'value cannot be empty';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) {
+                          _editedProduct = Product(
+                              id: _editedProduct.id,
+                              title: _editedProduct.title,
+                              description: _editedProduct.description,
+                              price: _editedProduct.price,
+                              isFavorite: _editedProduct.isFavorite,
+                              imageUrl: value);
+                        },
+                        onFieldSubmitted: (_) {
+                          _saveForm();
+                        },
+                        onEditingComplete: () {
+                          setState(() {});
+                        },
+                      )),
+                    ],
+                  ),
                 ),
-                TextFormField(
-                    initialValue: _initValues['price'],
-                    decoration: InputDecoration(labelText: 'Price'),
-                    keyboardType: TextInputType.number,
-                    focusNode: _priceFocusNode,
-                    onFieldSubmitted: (_) => FocusScope.of(context)
-                        .requestFocus(_descriptionFocusNode),
-                    onSaved: (value) {
-                      _editedProduct = Product(
-                          id: _editedProduct.id,
-                          title: _editedProduct.title,
-                          description: _editedProduct.description,
-                          price: double.parse(value),
-                          isFavorite: _editedProduct.isFavorite,
-                          imageUrl: _editedProduct.imageUrl);
-                    },
-                    validator: (value) {
-                      if (value.isEmpty) {
-                        return 'value cannot be empty';
-                      }
-                      return null;
-                    },
-                    textInputAction: TextInputAction.next),
-                TextFormField(
-                    initialValue: _initValues['description'],
-                    decoration: InputDecoration(labelText: 'Description'),
-                    maxLines: 3,
-                    keyboardType: TextInputType.multiline,
-                    focusNode: _descriptionFocusNode,
-                    validator: (value) {
-                      if (value.isEmpty) {
-                        return 'value cannot be empty';
-                      }
-                      return null;
-                    },
-                    onSaved: (value) {
-                      _editedProduct = Product(
-                          id: _editedProduct.id,
-                          title: _editedProduct.title,
-                          description: value,
-                          price: _editedProduct.price,
-                          isFavorite: _editedProduct.isFavorite,
-                          imageUrl: _editedProduct.imageUrl);
-                    },
-                    textInputAction: TextInputAction.next),
-                Expanded(
-                    child: TextFormField(
-                      /// you can't have an initalValue and a controller
-                  // initialValue: _initValues['imageUrl'],
-                  decoration: InputDecoration(labelText: 'Image URL'),
-                  keyboardType: TextInputType.url,
-                  textInputAction: TextInputAction.done,
-                  controller: _imageUrlController,
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return 'value cannot be empty';
-                    }
-                    return null;
-                  },
-                  onSaved: (value) {
-                    _editedProduct = Product(
-                        id: _editedProduct.id,
-                        title: _editedProduct.title,
-                        description: _editedProduct.description,
-                        price: _editedProduct.price,
-                        isFavorite: _editedProduct.isFavorite,
-                        imageUrl: value);
-                  },
-                  onFieldSubmitted: (_) {
-                    _saveForm();
-                  },
-                  onEditingComplete: () {
-                    setState(() {});
-                  },
-                )),
-              ],
-            ),
-          ),
-        ));
+              ));
   }
 
-  void _saveForm() {
+  Future<void> _saveForm() async {
     final isValid = _formKey.currentState.validate();
     if (!isValid) {
       return;
     }
     _formKey.currentState.save();
-    ///check if the product exist first
-    if(_editedProduct.id!=null){
-      Provider.of<Products>(context, listen: false).updateProduct(_editedProduct.id,_editedProduct);
+    setState(() {
+      _isLoading = true;
+    });
 
-    }else{
-      Provider.of<Products>(context, listen: false).addProduct(_editedProduct);
+    ///check if the product exist first
+    if (_editedProduct.id != null) {
+      await Provider.of<Products>(context, listen: false)
+          .updateProduct(_editedProduct.id, _editedProduct);
+      setState(() {
+        _isLoading = false;
+      });
+      Navigator.of(context).pop();
+    } else {
+      try {
+        await Provider.of<Products>(context, listen: false)
+            .addProduct(_editedProduct);
+      } catch (error) {
+        await showDialog(
+
+            ///don't forget the return statement here
+            context: context,
+            builder: (builderContext) {
+              return AlertDialog(
+                title: Text('Error Occurred'),
+                content: Text(error.toString()),
+                actions: [
+                  ElevatedButton(
+                    child: Text('OK'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  )
+                ],
+              );
+            });
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+        Navigator.of(context).pop();
+      }
     }
-    Navigator.of(context).pop();
   }
 }
